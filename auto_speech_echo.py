@@ -15,16 +15,24 @@ import subprocess
 import time
 import speech_recognition as sr
 
-kSystemPlayer = "afplay"  # alt: mplayer, mpg123, etc
-kNodePath = "/usr/local/bin/node"
 kTalkFile = "generated_talk.mp3"
 mic = None
 recognizer = None
 language = "en"
 
-# Or set it up in bash profile
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
-    "/Users/lillian/Desktop/talkingbear-master/talkingbear-9bfef5bb7338.json")
+ENV = "linux"
+
+if ENV == "linux":
+    kSystemPlayer = "mpg321"
+    kNodePath = "/home/pi/.nvm/versions/node/v11.11.0/bin/node"
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
+        "/home/pi/bear/talkingbear-9bfef5bb7338.json")
+else:
+    kSystemPlayer = "afplay"  # alt: mplayer, mpg123, etc
+    kNodePath = "/usr/local/bin/node"
+    # Or set it up in bash profile
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
+        "/Users/lillian/Desktop/talkingbear-master/talkingbear-9bfef5bb7338.json")
 
 
 def main():
@@ -39,7 +47,7 @@ def main():
 def initialize():
     global recognizer
     global mic
-    
+
     recognizer = sr.Recognizer()
 
     mic = sr.Microphone()  # uses default system mic
