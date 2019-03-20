@@ -12,13 +12,23 @@ pyaudio
 
 import os
 import subprocess
-import time
+import pydub
+import pydub.playback
 import speech_recognition as sr
+import time
+import threading
+from google.cloud import speech
+from google.cloud.speech import enums
+from google.cloud.speech import types
+from google.cloud import texttospeech
 
 kTalkFile = "generated_talk.mp3"
 mic = None
 recognizer = None
 language = "en"
+filler_thread = None
+kDoTheStupidJavascriptThing = False  # Only enable if on a laptop with
+                                     # unresolvable protoc version conflicts
 
 ENV = "linux"
 
@@ -34,6 +44,40 @@ else:
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
         "/Users/lillian/Desktop/talkingbear-master/talkingbear-9bfef5bb7338.json")
 
+
+def get_voice_details(voicetype):
+    print voicetype
+    if voicetype == "2":
+        return {
+            "language_code": 'en-GB',
+            "gender": texttospeech.enums.SsmlVoiceGender.FEMALE,
+            "name": "en-GB-Standard-A",
+            "pitch": 6.4,
+            "speaking_rate": 0.7
+        }
+    elif voicetype == "3":
+        return {
+            "language_code": 'de-DE',
+            "gender": texttospeech.enums.SsmlVoiceGender.FEMALE,
+            "name": "de-DE-Standard-A",
+            "pitch": 2.40,
+            "speaking_rate": 0.9
+        }
+    elif voicetype == "4":
+        return {
+            "language_code": 'ja-JP',
+            "gender": texttospeech.enums.SsmlVoiceGender.FEMALE,
+            "name": "ja-JP-Standard-A",
+            "pitch": 2.40,
+            "speaking_rate": 1.23
+        }
+    return {
+        "language_code": 'en-AU',
+        "gender": texttospeech.enums.SsmlVoiceGender.FEMALE,
+        "name": "en-AU-Standard-C",
+        "pitch": 6.0,
+        "speaking_rate": 0.9
+    }
 
 def main():
     initialize()
@@ -62,18 +106,67 @@ def initialize():
 def rounded_time():
     return round(time.time(), 1)
 
+def play_filler():
+    global filler_thread
+    def play_filler_sound():
+        print "In thread"
+        sound = pydub.AudioSegment.from_mp3("filler.mp3")
+        pydub.playback.play(sound)
 
-def text_to_speech(text, voicetype):
+    filler_thread = threading.Thread(target=play_filler_sound)
+    filler_thread.start()
+
+def js_text_to_speech_deprecated(text, voicetype):
     # Calls out to a JS file because there's a dumb protoc versioning issue
     # on this laptop with running Google's Python text to speech library
-    t = rounded_time()
-    set_language(text);
-    print "language: "+str(language)
-    print "voicetype: "+str(voicetype)
-    print "text: "+str(text)
     subprocess.Popen([kNodePath, "talk.js", language, voicetype, text]).wait()
     print "--- timing to speech: " + str(rounded_time() - t) + " ---"
     subprocess.Popen([kSystemPlayer, kTalkFile]).wait()
+
+def text_to_speech(text, voicetype):
+    t = rounded_time()
+    set_language(text);
+    print "language: " + str(language)
+    print "voicetype: " + str(voicetype)
+    print "text: "+ str(text)
+    voice_details = get_voice_details(voicetype)
+    print voice_details["name"]
+    if kDoTheStupidJavascriptThing:
+        js_text_to_speech_deprecated(text, voicetype)
+        return
+
+    client = texttospeech.TextToSpeechClient()
+
+    # Set the text input to be synthesized
+    synthesis_input = texttospeech.types.SynthesisInput(text=(text or "mumble mumble"))
+
+    voice = texttospeech.types.VoiceSelectionParams(
+        language_code=voice_details["language_code"],
+        name=voice_details["name"],
+        ssml_gender=voice_details["gender"])
+
+    audio_config = texttospeech.types.AudioConfig(
+        audio_encoding=texttospeech.enums.AudioEncoding.MP3,
+        pitch=voice_details["pitch"],
+        speaking_rate=voice_details["speaking_rate"]
+        )
+
+    # Perform the text-to-speech request on the text input with the selected
+    # voice parameters and audio file type
+    response = client.synthesize_speech(synthesis_input, voice, audio_config)
+    print "--- timing to speech: " + str(rounded_time() - t) + " ---"
+    t = rounded_time()
+    # TODO we could probably play this directly without saving to mp3
+    # The response's audio_content is binary.
+    with open(kTalkFile, 'wb') as out:
+        # Write the response to the output file.
+        out.write(response.audio_content)
+        print('Audio content written to file "output.mp3"')
+    print "--- written to file: "  + str(rounded_time() - t) + " ---"
+    if filler_thread:
+        filler_thread.join()  # wait for the filler filler_thread
+    subprocess.Popen([kSystemPlayer, kTalkFile]).wait()
+
 
 def set_language(text):
     global language
@@ -99,7 +192,7 @@ def record_from_mic():
         t = rounded_time()
         print "Mimicking..."
         # Kick off a filler sound while we compute
-        subprocess.Popen([kSystemPlayer, "filler.mp3"])
+        # play_filler()
         try:
             # text = recognizer.recognize_sphinx(recording)
             text = recognizer.recognize_google(recording)
