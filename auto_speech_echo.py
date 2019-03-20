@@ -30,9 +30,10 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
 def main():
     initialize()
     # raw_input("Press enter to start.")
+    voicetype = raw_input("Which voice? (1 = Aussie, 2 = UK, 3 = German, 4 = Chinese) ")
     while True:
         text = record_from_mic()
-        text_to_speech(text)
+        text_to_speech(text, voicetype)
 
 
 def initialize():
@@ -54,12 +55,15 @@ def rounded_time():
     return round(time.time(), 1)
 
 
-def text_to_speech(text):
+def text_to_speech(text, voicetype):
     # Calls out to a JS file because there's a dumb protoc versioning issue
     # on this laptop with running Google's Python text to speech library
     t = rounded_time()
     set_language(text);
-    subprocess.Popen([kNodePath, "talk.js", language, text]).wait()
+    print "language: "+str(language)
+    print "voicetype: "+str(voicetype)
+    print "text: "+str(text)
+    subprocess.Popen([kNodePath, "talk.js", language, voicetype, text]).wait()
     print "--- timing to speech: " + str(rounded_time() - t) + " ---"
     subprocess.Popen([kSystemPlayer, kTalkFile]).wait()
 

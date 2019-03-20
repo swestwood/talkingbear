@@ -19,10 +19,40 @@ const projectId = 'talkingbear';
 // The text to synthesize, passed from the command line
 var args = process.argv.slice(2);
 const language = args.length > 0 ? args[0] : "en";
-const text = args.length > 1 ? args[1] : 'Hello, world!';
+const voicetype = args.length > 1 ? args[1] : 1;
+const text = args.length > 2 ? args[2] : 'Hello, world!';
+
+console.log("voicetype: "+voicetype);
+
 
 var lang = 'en-AU';
 var voice = 'en-AU-Standard-C'
+
+if (voicetype == 1) {
+    language_code = 'en-AU';
+    gender = 'FEMALE';
+    language_name = "en-AU-Standard-C";
+    speaking_pitch = 6.0;
+    speaking_rate = 0.9;
+} else if (voicetype == 2) {
+    language_code = 'en-GB';
+    gender = 'FEMALE';
+    language_name = "en-GB-Standard-A";
+    speaking_pitch = 6.4;
+    speaking_rate = 0.7;
+} else if (voicetype == 3) {
+    language_code = 'de-DE';
+    gender = 'FEMALE';
+    language_name = "de-DE-Standard-A";
+    speaking_pitch = 2.40;
+    speaking_rate = 0.9;
+} else if (voicetype == 4) {
+    language_code = 'ja-JP';
+    gender = 'FEMALE';
+    language_name = "ja-JP-Standard-A";
+    speaking_pitch = 2.40;
+    speaking_rate = 1.23;
+}
 
 console.log("Converting phrase: "+text+", in language: "+language);
 translate(text, language);
@@ -50,14 +80,14 @@ async function convertToSpeech(text) {
     const request = {
         input: {text: text},
         voice: {
-            languageCode: lang,
-            ssmlGender: 'FEMALE',
-            name: voice,
+            languageCode: language_code, // normally 'en-AU'
+            ssmlGender: gender, // normally 'FEMALE'
+            name: language_name // normally "en-AU-Standard-C"
         },
         audioConfig: {
             audioEncoding: 'MP3',
-            "pitch": "6.0",
-            speakingRate: .9
+            pitch: speaking_pitch, // normally 6.0
+            speakingRate: speaking_rate // normally .9
         }
     };
 
