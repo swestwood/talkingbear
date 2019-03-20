@@ -16,14 +16,15 @@ import time
 import speech_recognition as sr
 
 kSystemPlayer = "afplay"  # alt: mplayer, mpg123, etc
-kNodePath = "/Users/swestwood/.nvm/versions/node/v10.5.0/bin/node"
+kNodePath = "/usr/local/bin/node"
 kTalkFile = "generated_talk.mp3"
 mic = None
 recognizer = None
+language = "en"
 
 # Or set it up in bash profile
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
-    "/Users/swestwood/bear/talkingbear-9bfef5bb7338.json")
+    "/Users/lillian/Desktop/talkingbear-master/talkingbear-9bfef5bb7338.json")
 
 
 def main():
@@ -37,12 +38,16 @@ def main():
 def initialize():
     global recognizer
     global mic
+    
     recognizer = sr.Recognizer()
+
     mic = sr.Microphone()  # uses default system mic
     with mic as source:
         # always do this for 0.5-1 second
         print "Adjusting for ambient noise... (please hush)"
         recognizer.adjust_for_ambient_noise(source, duration=2)
+        recognizer.pause_threshold = 0.2
+        recognizer.non_speaking_duration = 0.2
 
 
 def rounded_time():
@@ -53,10 +58,27 @@ def text_to_speech(text):
     # Calls out to a JS file because there's a dumb protoc versioning issue
     # on this laptop with running Google's Python text to speech library
     t = rounded_time()
-    subprocess.Popen([kNodePath, "talk.js", text]).wait()
+    set_language(text);
+    subprocess.Popen([kNodePath, "talk.js", language, text]).wait()
     print "--- timing to speech: " + str(rounded_time() - t) + " ---"
     subprocess.Popen([kSystemPlayer, kTalkFile]).wait()
 
+def set_language(text):
+    global language
+    if text.lower() == "spanish":
+        language = "es";
+    elif text.lower() == "english":
+        language = "en";
+    elif text.lower() == "german":
+        language = "de";
+    elif text.lower() == "slovak":
+        language = "sk";
+    elif text.lower() == "japanese":
+        language = "ja";
+    elif text.lower() == "chinese":
+        language = "zh-CN";
+    elif text.lower() == "french":
+        language = "fr";
 
 def record_from_mic():
     with mic as source:
