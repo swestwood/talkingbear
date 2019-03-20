@@ -117,6 +117,7 @@ def play_filler():
     filler_thread.start()
 
 def js_text_to_speech_deprecated(text, voicetype):
+    t = rounded_time()
     # Calls out to a JS file because there's a dumb protoc versioning issue
     # on this laptop with running Google's Python text to speech library
     subprocess.Popen([kNodePath, "talk.js", language, voicetype, text]).wait()
