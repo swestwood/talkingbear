@@ -80,7 +80,6 @@ def get_voice_details(voicetype):
         "speaking_rate": 0.9
     }
 
-
 def main():
     initialize()
     # raw_input("Press enter to start.")
@@ -95,7 +94,6 @@ def main():
             print "Chose new voice."
             continue
         text_to_speech(text, voicetype)
-
 
 def initialize():
     global recognizer
@@ -119,16 +117,16 @@ def play_filler():
     global filler_thread
     def play_filler_sound():
         print "In thread"
-        sound = pydub.AudioSegment.from_mp3("fillers/filler.mp3")
+        sound = pydub.AudioSegment.from_mp3("fillers/filler%d.mp3" % random.randint(0, 4))
         pydub.playback.play(sound)
 
     filler_thread = threading.Thread(target=play_filler_sound)
     filler_thread.start()
 
 def js_text_to_speech_deprecated(text, voicetype):
-    t = rounded_time()
     # Calls out to a JS file because there's a dumb protoc versioning issue
     # on this laptop with running Google's Python text to speech library
+    t = rounded_time()
     subprocess.Popen([kNodePath, "talk.js", language, voicetype, text]).wait()
     print "--- timing to speech: " + str(rounded_time() - t) + " ---"
     subprocess.Popen([kSystemPlayer, kTalkFile]).wait()
@@ -202,7 +200,7 @@ def record_from_mic():
         t = rounded_time()
         print "Mimicking..."
         # Kick off a filler sound while we compute
-        # play_filler()
+        play_filler()
         try:
             # text = recognizer.recognize_sphinx(recording)
             text = recognizer.recognize_google(recording)
