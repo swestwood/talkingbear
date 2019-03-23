@@ -47,7 +47,7 @@ else:
 
 def get_voice_details(voicetype):
     print voicetype
-    if voicetype == "2":
+    if voicetype == 2:
         return {
             "language_code": 'en-GB',
             "gender": texttospeech.enums.SsmlVoiceGender.FEMALE,
@@ -55,7 +55,7 @@ def get_voice_details(voicetype):
             "pitch": 6.4,
             "speaking_rate": 0.7
         }
-    elif voicetype == "3":
+    elif voicetype == 3:
         return {
             "language_code": 'de-DE',
             "gender": texttospeech.enums.SsmlVoiceGender.FEMALE,
@@ -63,7 +63,7 @@ def get_voice_details(voicetype):
             "pitch": 2.40,
             "speaking_rate": 0.9
         }
-    elif voicetype == "4":
+    elif voicetype == 4:
         return {
             "language_code": 'ja-JP',
             "gender": texttospeech.enums.SsmlVoiceGender.FEMALE,
@@ -79,12 +79,17 @@ def get_voice_details(voicetype):
         "speaking_rate": 0.9
     }
 
+
 def main():
     initialize()
     # raw_input("Press enter to start.")
-    voicetype = raw_input("Which voice? (1 = Aussie, 2 = UK, 3 = German, 4 = Chinese) ")
+    voicetype = int(raw_input("Which voice? (1 = Aussie, 2 = UK, 3 = German, 4 = Chinese) "))
     while True:
         text = record_from_mic()
+        if text and text.lower() == "new voice":
+            voicetype = random.choice([num for num in range(1, 5) if num != voicetype])
+            print "Chose new voice."
+            continue
         text_to_speech(text, voicetype)
 
 
