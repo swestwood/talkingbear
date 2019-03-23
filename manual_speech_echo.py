@@ -114,7 +114,7 @@ def record_from_mic():
     wf.close()
 
     # Kick off a filler sound while we compute
-    subprocess.Popen([kSystemPlayer, "filler.mp3"])
+    subprocess.Popen([kSystemPlayer, "fillers/filler.mp3"])
         
 
 def set_language(text):

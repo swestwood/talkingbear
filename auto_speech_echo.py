@@ -118,7 +118,7 @@ def play_filler():
     global filler_thread
     def play_filler_sound():
         print "In thread"
-        sound = pydub.AudioSegment.from_mp3("filler.mp3")
+        sound = pydub.AudioSegment.from_mp3("fillers/filler.mp3")
         pydub.playback.play(sound)
 
     filler_thread = threading.Thread(target=play_filler_sound)
