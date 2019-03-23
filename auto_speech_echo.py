@@ -83,7 +83,10 @@ def get_voice_details(voicetype):
 def main():
     initialize()
     # raw_input("Press enter to start.")
-    voicetype = int(raw_input("Which voice? (1 = Aussie, 2 = UK, 3 = German, 4 = Chinese) "))
+    if ENV == "linux":
+        voicetype = 1
+    else:
+        voicetype = int(raw_input("Which voice? (1 = Aussie, 2 = UK, 3 = German, 4 = Chinese) "))
     while True:
         text = record_from_mic()
         if text and text.lower() == "new voice":
