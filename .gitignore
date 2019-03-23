@@ -1,4 +1,4 @@
 *.wav
-./.mp3
+generated_talk.mp3
 *.json
 node_modules/

@@ -44,6 +44,7 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
 
 
 def main():
+    # TODO add the different voices
     while True:
         text_to_speech(speech_to_text())
 
