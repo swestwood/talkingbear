@@ -31,7 +31,7 @@ filler_thread = None
 kDoTheStupidJavascriptThing = False  # Only enable if on a laptop with
                                      # unresolvable protoc version conflicts
 
-ENV = "linux"
+ENV = "mac"
 
 if ENV == "linux":
     kSystemPlayer = "mpg321"
@@ -88,7 +88,7 @@ def main():
     else:
         voicetype = int(raw_input("Which voice? (1 = Aussie, 2 = UK, 3 = German, 4 = Chinese) "))
     while True:
-        text = record_from_mic()
+        text = record_from_mic(voicetype)
         if text and text.lower() == "new voice":
             voicetype = random.choice([num for num in range(1, 5) if num != voicetype])
             print "Chose new voice."
@@ -113,11 +113,13 @@ def initialize():
 def rounded_time():
     return round(time.time(), 1)
 
-def play_filler():
+def play_filler(voicetype):
     global filler_thread
     def play_filler_sound():
         print "In thread"
-        sound = pydub.AudioSegment.from_mp3("fillers/filler%d.mp3" % random.randint(0, 4))
+        #sound = pydub.AudioSegment.from_mp3("fillers/filler0.mp3")
+        #sound = pydub.AudioSegment.from_mp3("fillers/filler%d.mp3" % random.randint(0, 4))
+        sound = pydub.AudioSegment.from_mp3("fillers/filler%d.mp3" % (voicetype - 1))
         pydub.playback.play(sound)
 
     filler_thread = threading.Thread(target=play_filler_sound)
@@ -146,6 +148,8 @@ def text_to_speech(text, voicetype):
     client = texttospeech.TextToSpeechClient()
 
     # Set the text input to be synthesized
+    if not text:
+        return
     synthesis_input = texttospeech.types.SynthesisInput(text=(text or "mumble mumble"))
 
     voice = texttospeech.types.VoiceSelectionParams(
@@ -193,14 +197,14 @@ def set_language(text):
     elif text.lower() == "french":
         language = "fr";
 
-def record_from_mic():
+def record_from_mic(voicetype):
     with mic as source:
         print "Speak! (silence to stop)"
-        recording = recognizer.listen(source)
+        recording = recognizer.listen(source, None, 3)
         t = rounded_time()
         print "Mimicking..."
         # Kick off a filler sound while we compute
-        play_filler()
+        # play_filler(voicetype)
         try:
             # text = recognizer.recognize_sphinx(recording)
             text = recognizer.recognize_google(recording)
@@ -210,8 +214,9 @@ def record_from_mic():
             print text
         except sr.UnknownValueError:
             # Unable to transcribe text
-            text = "Mumble mumble mumble."
-            print text
+            # text = "Mumble mumble mumble."
+            text = ""
+            print "could not identify"
         print "--- time to text: " + str(rounded_time() - t) + " ---"
         return text
 
